@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/virtual_pc.dart';
 import '../widgets/pc_card.dart';
+import 'pc_detail_screen.dart';
 
 /// The first screen the user sees: a list of their virtual PCs.
 ///
@@ -36,10 +37,10 @@ class HomeScreen extends StatelessWidget {
                     return PcCard(
                       pc: pc,
                       onTap: () {
-                        // Placeholder — will navigate to the PC detail
-                        // screen once that's built.
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Tapped ${pc.name}')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => PcDetailScreen(pc: pc)),
                         );
                       },
                     );
