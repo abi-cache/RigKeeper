@@ -32,17 +32,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+      if (!mounted) return;
       setState(() {
         _message = 'Account created! Check your email to confirm, then log in.';
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _message = 'Sign up failed: ${e.toString()}';
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

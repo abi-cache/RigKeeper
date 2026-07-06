@@ -31,13 +31,16 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       // No navigation needed here — AuthGate handles it.
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Login failed. Check your email and password.';
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
