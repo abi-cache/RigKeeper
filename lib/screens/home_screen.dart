@@ -103,6 +103,42 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  /// Removes a PC from the visible list immediately (so the swipe
+  /// feels instant), but delays the REAL database delete for a few
+  /// seconds. If the user taps "Undo" in that window, we just put it
+  /// back in the list and cancel the pending delete. This is the
+  /// standard "optimistic delete with undo" pattern used by apps
+  /// like Gmail — much friendlier than an upfront confirmation
+  /// dialog for something as easy to trigger as a swipe.
+  void _deletePcWithUndo(VirtualPc pc, int index) {
+    setState(() => _pcs.removeAt(index));
+
+    bool undone = false;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Deleted "${pc.name}"'),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: 'UNDO',
+          onPressed: () {
+            undone = true;
+            setState(() => _pcs.insert(index, pc));
+          },
+        ),
+      ),
+    );
+
+    // Wait slightly longer than the snackbar's own duration so the
+    // undo button has definitely finished being tappable before we
+    // commit to the real delete.
+    Future.delayed(const Duration(seconds: 6), () async {
+      if (!undone) {
+        await supabase.from('pcs').delete().eq('id', pc.id!);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -150,20 +186,38 @@ class _HomeScreenState extends State<HomeScreen> {
                               itemCount: _pcs.length,
                               itemBuilder: (context, index) {
                                 final pc = _pcs[index];
-                                return PcCard(
-                                  pc: pc,
-                                  onTap: () async {
-                                    await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              PcDetailScreen(pc: pc)),
-                                    );
-                                    // Recalculate stats in case
-                                    // components/logs changed while
-                                    // the detail screen was open.
-                                    _loadPcs();
+                                return Dismissible(
+                                  key: Key(pc.id!),
+                                  direction: DismissDirection.endToStart,
+                                  background: Container(
+                                    alignment: Alignment.centerRight,
+                                    padding:
+                                        const EdgeInsets.only(right: 20),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.shade400,
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                    ),
+                                    margin:
+                                        const EdgeInsets.only(bottom: 12),
+                                    child: const Icon(Icons.delete,
+                                        color: Colors.white),
+                                  ),
+                                  onDismissed: (direction) {
+                                    _deletePcWithUndo(pc, index);
                                   },
+                                  child: PcCard(
+                                    pc: pc,
+                                    onTap: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                PcDetailScreen(pc: pc)),
+                                      );
+                                      _loadPcs();
+                                    },
+                                  ),
                                 );
                               },
                             ),
