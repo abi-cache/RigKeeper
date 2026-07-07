@@ -63,6 +63,53 @@ class Component {
     }
     return years;
   }
+
+  /// A rough "typical lifespan" per category, in years — these are
+  /// general industry rules of thumb (e.g. fans and thermal paste
+  /// wear out faster than a case), NOT manufacturer-guaranteed
+  /// figures. Used only to suggest "this might be worth checking
+  /// soon," never as a hard failure prediction.
+  int get typicalLifespanYears {
+    switch (category) {
+      case 'CPU':
+        return 7;
+      case 'GPU':
+        return 5;
+      case 'RAM':
+        return 10;
+      case 'Storage':
+        return 5;
+      case 'PSU':
+        return 7;
+      case 'CPU Cooler':
+        return 5;
+      case 'Fan':
+        return 4;
+      case 'Motherboard':
+        return 8;
+      case 'Case':
+        return 15;
+      default:
+        return 6;
+    }
+  }
+
+  /// Years remaining before this component reaches its typical
+  /// lifespan. Negative means it's past the typical window — worth
+  /// a closer look, not necessarily broken.
+  int? get estimatedYearsRemaining {
+    if (ageInYears == null) return null;
+    return typicalLifespanYears - ageInYears!;
+  }
+
+  /// Whether to show an "approaching end of typical lifespan"
+  /// suggestion — true once within 1 year of, or past, the typical
+  /// lifespan for that category.
+  bool get isApproachingLifespan {
+    final remaining = estimatedYearsRemaining;
+    if (remaining == null) return false;
+    return remaining <= 1;
+  }
 }
 
 /// Fixed list of suggested categories for the dropdown. Users aren't
