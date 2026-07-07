@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/virtual_pc.dart';
 import '../widgets/pc_card.dart';
 import 'pc_detail_screen.dart';
+import '../main.dart';
 
 /// The first screen the user sees: a list of their virtual PCs.
 ///
@@ -15,8 +16,22 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      body: SafeArea(
+  backgroundColor: Colors.grey.shade50,
+  appBar: AppBar(
+    backgroundColor: Colors.grey.shade50,
+    elevation: 0,
+    title: const Text('RigKeeper'),
+    actions: [
+      IconButton(
+        icon: const Icon(Icons.logout),
+        tooltip: 'Log out',
+        onPressed: () async {
+          await supabase.auth.signOut();
+        },
+      ),
+    ],
+  ),
+  body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
