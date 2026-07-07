@@ -179,6 +179,19 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                                                 : Colors.green.shade700,
                                           ),
                                         ),
+                                      if (c.isApproachingLifespan)
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 2),
+                                          child: Text(
+                                            '💡 Approaching typical lifespan (~${c.typicalLifespanYears}yrs for ${c.category}) — worth checking',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.blueGrey.shade700,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                        ),
                                     ],
                                   ),
                                   Icon(Icons.chevron_right,
