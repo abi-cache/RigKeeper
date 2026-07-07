@@ -16,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<VirtualPc> _pcs = [];
   bool _isLoading = true;
+  int _overdueCount = 0;
 
   @override
   void initState() {
@@ -99,6 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {
       _pcs = loadedPcs;
+      _overdueCount =
+          loadedPcs.where((pc) => pc.nextCleaningInDays <= 0).length;
       _isLoading = false;
     });
   }
@@ -169,7 +172,36 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 2),
               const Text('Your PCs',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              if (!_isLoading && _overdueCount > 0)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.notifications_active_outlined,
+                          size: 18, color: Colors.orange.shade800),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _overdueCount == 1
+                              ? '1 PC is due for cleaning'
+                              : '$_overdueCount PCs are due for cleaning',
+                          style: TextStyle(
+                              fontSize: 13, color: Colors.orange.shade900),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 4),
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
