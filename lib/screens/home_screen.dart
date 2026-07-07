@@ -4,13 +4,8 @@ import '../widgets/pc_card.dart';
 import 'pc_detail_screen.dart';
 import 'add_pc_screen.dart';
 import '../main.dart';
+import '../services/maintenance_prediction.dart';
 
-/// The first screen the user sees: a list of their virtual PCs.
-///
-/// This is now a StatefulWidget (not Stateless like before) because
-/// it needs to hold onto data that changes over time — the fetched
-/// list of PCs — and re-render itself when that data arrives or
-/// changes. StatelessWidgets can't do that on their own.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -25,23 +20,85 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // initState runs once, right when this screen is first created —
-    // the natural place to kick off a first data fetch.
     _loadPcs();
   }
 
+  /// Fetches every PC for the current user, then for each one,
+  /// separately fetches its components and maintenance logs to
+  /// compute real stats.
+  ///
+  /// Note: this makes several small queries per PC rather than one
+  /// big combined query — perfectly fine at capstone scale (a
+  /// handful of PCs), but a production version with many users would
+  /// want a single SQL view/join to do this more efficiently. Flagged
+  /// here as a known trade-off, not an oversight.
   Future<void> _loadPcs() async {
     setState(() => _isLoading = true);
 
     final userId = supabase.auth.currentUser!.id;
-    final rows = await supabase
+    final pcRows = await supabase
         .from('pcs')
         .select()
         .eq('user_id', userId)
         .order('created_at');
 
+    final List<VirtualPc> loadedPcs = [];
+
+    for (final pcRow in pcRows) {
+      final pcId = pcRow['id'] as String;
+
+      final componentRows =
+          await supabase.from('components').select().eq('pc_id', pcId);
+
+      final logRows = await supabase
+          .from('maintenance_logs')
+          .select()
+          .eq('pc_id', pcId)
+          .order('log_date', ascending: false)
+          .limit(1);
+
+      // Days since last cleaning — if never cleaned, fall back to
+      // days since the PC was added.
+      int daysSinceLastCleaned;
+      if (logRows.isNotEmpty) {
+        final lastDate = DateTime.parse(logRows.first['log_date'] as String);
+        daysSinceLastCleaned = DateTime.now().difference(lastDate).inDays;
+      } else {
+        final createdAt = DateTime.parse(pcRow['created_at'] as String);
+        daysSinceLastCleaned = DateTime.now().difference(createdAt).inDays;
+      }
+
+      // Average component age, in years, ignoring components with no
+      // manufacturing date set.
+      final agesWithDates = componentRows
+          .where((c) => c['manufacturing_date'] != null)
+          .map((c) {
+        final made = DateTime.parse(c['manufacturing_date'] as String);
+        return DateTime.now().difference(made).inDays / 365.0;
+      }).toList();
+
+      final averageAge = agesWithDates.isEmpty
+          ? 0.0
+          : agesWithDates.reduce((a, b) => a + b) / agesWithDates.length;
+
+      final nextCleaningInDays =
+          predictNextCleaning(daysSinceLastCleaned: daysSinceLastCleaned);
+      final healthScore = calculateHealthScore(
+        daysSinceLastCleaned: daysSinceLastCleaned,
+        averageComponentAgeYears: averageAge,
+      );
+
+      loadedPcs.add(VirtualPc.fromMap(
+        pcRow,
+        componentCount: componentRows.length,
+        healthScore: healthScore,
+        lastCleanedDaysAgo: daysSinceLastCleaned,
+        nextCleaningInDays: nextCleaningInDays,
+      ));
+    }
+
     setState(() {
-      _pcs = rows.map((row) => VirtualPc.fromMap(row)).toList();
+      _pcs = loadedPcs;
       _isLoading = false;
     });
   }
@@ -87,22 +144,29 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(color: Colors.grey.shade600),
                             ),
                           )
-                        : ListView.builder(
-                            itemCount: _pcs.length,
-                            itemBuilder: (context, index) {
-                              final pc = _pcs[index];
-                              return PcCard(
-                                pc: pc,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            PcDetailScreen(pc: pc)),
-                                  );
-                                },
-                              );
-                            },
+                        : RefreshIndicator(
+                            onRefresh: _loadPcs,
+                            child: ListView.builder(
+                              itemCount: _pcs.length,
+                              itemBuilder: (context, index) {
+                                final pc = _pcs[index];
+                                return PcCard(
+                                  pc: pc,
+                                  onTap: () async {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              PcDetailScreen(pc: pc)),
+                                    );
+                                    // Recalculate stats in case
+                                    // components/logs changed while
+                                    // the detail screen was open.
+                                    _loadPcs();
+                                  },
+                                );
+                              },
+                            ),
                           ),
               ),
               Padding(
@@ -111,8 +175,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () async {
-                      // Wait for AddPcScreen to close, then check if it
-                      // told us to refresh (it returns `true` on save).
                       final shouldRefresh = await Navigator.push(
                         context,
                         MaterialPageRoute(
