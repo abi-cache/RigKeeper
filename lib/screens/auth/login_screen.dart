@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../main.dart';
 import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 
 /// Email + password login. On success, does nothing explicitly —
 /// AuthGate is listening for the auth state change and will swap to
@@ -31,16 +32,13 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       // No navigation needed here — AuthGate handles it.
     } catch (e) {
-      if (!mounted) return;
       setState(() {
         _errorMessage = 'Login failed. Check your email and password.';
       });
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -88,7 +86,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 12),
                 Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
               ],
-              const SizedBox(height: 20),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordScreen()),
+                    );
+                  },
+                  child: const Text('Forgot password?'),
+                ),
+              ),
+              const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: _isLoading ? null : _signIn,
                 child: _isLoading
