@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 
 /// Represents one "virtual PC" the user has built in the app.
 ///
-/// This is just data — a plain Dart class with no UI code inside it.
-/// Later, this will come from your database/API instead of being
-/// typed in by hand. Keeping it separate from the widgets now means
-/// swapping in real data later won't touch any UI code.
+/// [id] is null for PCs that only exist locally (not used anymore,
+/// kept nullable for safety). Everything else after [name] is still
+/// placeholder data — health score, last cleaned, next cleaning —
+/// until the Components + Maintenance Log milestones are built.
 class VirtualPc {
+  final String? id;
   final String name;
   final IconData icon;
   final int componentCount;
@@ -15,6 +16,7 @@ class VirtualPc {
   final int nextCleaningInDays;
 
   const VirtualPc({
+    this.id,
     required this.name,
     required this.icon,
     required this.componentCount,
@@ -23,10 +25,22 @@ class VirtualPc {
     required this.nextCleaningInDays,
   });
 
-  /// Which color/label the "clean in Xd" badge should use.
-  /// This is placeholder logic — a simple threshold on days remaining.
-  /// Later, this same value will come from your prediction engine
-  /// (Milestone: Smart Maintenance Prediction), not a fixed rule.
+  /// Builds a VirtualPc from a row returned by Supabase.
+  /// The stats fields are hardcoded placeholders for now — they'll
+  /// come from real queries once the Components/Maintenance Log
+  /// tables exist.
+  factory VirtualPc.fromMap(Map<String, dynamic> map) {
+    return VirtualPc(
+      id: map['id'] as String,
+      name: map['name'] as String,
+      icon: Icons.desktop_windows_outlined,
+      componentCount: 0,
+      healthScore: 100,
+      lastCleanedDaysAgo: 0,
+      nextCleaningInDays: 30,
+    );
+  }
+
   CleaningUrgency get urgency {
     if (nextCleaningInDays <= 7) return CleaningUrgency.overdueSoon;
     if (nextCleaningInDays <= 20) return CleaningUrgency.dueSoon;
@@ -35,25 +49,3 @@ class VirtualPc {
 }
 
 enum CleaningUrgency { healthy, dueSoon, overdueSoon }
-
-/// Temporary mock data so we can see the Home screen before the
-/// database/API exists. Replace this with a real data source once
-/// Milestone 2 (Virtual PC Builder + backend) is built.
-const List<VirtualPc> mockPcs = [
-  VirtualPc(
-    name: 'Gaming rig',
-    icon: Icons.desktop_windows_outlined,
-    componentCount: 6,
-    healthScore: 82,
-    lastCleanedDaysAgo: 47,
-    nextCleaningInDays: 13,
-  ),
-  VirtualPc(
-    name: 'Work laptop',
-    icon: Icons.laptop_mac_outlined,
-    componentCount: 4,
-    healthScore: 91,
-    lastCleanedDaysAgo: 20,
-    nextCleaningInDays: 41,
-  ),
-];
