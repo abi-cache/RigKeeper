@@ -11,6 +11,7 @@ class Component {
   final String category;
   final String? serialNumber;
   final DateTime? manufacturingDate;
+  final DateTime? warrantyExpiration;
   final String? notes;
 
   const Component({
@@ -20,6 +21,7 @@ class Component {
     required this.category,
     this.serialNumber,
     this.manufacturingDate,
+    this.warrantyExpiration,
     this.notes,
   });
 
@@ -33,8 +35,18 @@ class Component {
       manufacturingDate: map['manufacturing_date'] != null
           ? DateTime.parse(map['manufacturing_date'] as String)
           : null,
+      warrantyExpiration: map['warranty_expiration'] != null
+          ? DateTime.parse(map['warranty_expiration'] as String)
+          : null,
       notes: map['notes'] as String?,
     );
+  }
+
+  /// Days left until warranty expires. Negative = already expired.
+  /// Null if no warranty date was ever entered.
+  int? get warrantyDaysLeft {
+    if (warrantyExpiration == null) return null;
+    return warrantyExpiration!.difference(DateTime.now()).inDays;
   }
 
   /// How old this component is, in whole years — used later for
