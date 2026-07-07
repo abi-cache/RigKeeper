@@ -82,8 +82,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ? 0.0
           : agesWithDates.reduce((a, b) => a + b) / agesWithDates.length;
 
-      final nextCleaningInDays =
-          predictNextCleaning(daysSinceLastCleaned: daysSinceLastCleaned);
+      final nextCleaningInDays = predictNextCleaning(
+        daysSinceLastCleaned: daysSinceLastCleaned,
+        dustLevel: pcRow['dust_level'] as String? ?? 'medium',
+        hasPets: pcRow['has_pets'] as bool? ?? false,
+        dailyUsageHours: pcRow['daily_usage_hours'] as int? ?? 4,
+      );
       final healthScore = calculateHealthScore(
         daysSinceLastCleaned: daysSinceLastCleaned,
         averageComponentAgeYears: averageAge,
