@@ -12,16 +12,63 @@
 library;
 
 /// How many days between cleanings we assume is "ideal" for a
-/// typical PC. A future improvement: vary this per PC based on fan
-/// count, case airflow type, or usage environment (dust, pets, etc)
-/// as mentioned in the original project brief's "Smart Maintenance
-/// Prediction" section.
-const int _idealCleaningIntervalDays = 60;
+/// typical PC under average conditions. This is the baseline before
+/// any environment adjustments are applied below.
+const int _baseCleaningIntervalDays = 60;
 
-/// Returns how many days until the next cleaning is "due".
-/// A negative number means it's already overdue.
-int predictNextCleaning({required int daysSinceLastCleaned}) {
-  return _idealCleaningIntervalDays - daysSinceLastCleaned;
+/// Adjusts the base interval based on real environment factors from
+/// the original brief: dust exposure, pets, and usage hours. Still
+/// fully rule-based and explainable — each adjustment is a plain,
+/// named reason, not a hidden weight in a model.
+int _adjustedIdealInterval({
+  required String dustLevel,
+  required bool hasPets,
+  required int dailyUsageHours,
+}) {
+  int interval = _baseCleaningIntervalDays;
+
+  switch (dustLevel) {
+    case 'low':
+      interval += 15;
+      break;
+    case 'high':
+      interval -= 20;
+      break;
+    default: // 'medium'
+      break;
+  }
+
+  if (hasPets) {
+    interval -= 15; // pet hair/dander clogs filters faster
+  }
+
+  if (dailyUsageHours >= 10) {
+    interval -= 10; // more runtime = more airflow = more dust pulled in
+  } else if (dailyUsageHours <= 2) {
+    interval += 10;
+  }
+
+  // Never let environment factors push the interval below 14 days —
+  // avoids nonsensical "clean every 3 days" results from stacking
+  // multiple adjustments.
+  return interval < 14 ? 14 : interval;
+}
+
+/// Returns how many days until the next cleaning is "due", now
+/// factoring in the PC's environment. A negative number means it's
+/// already overdue.
+int predictNextCleaning({
+  required int daysSinceLastCleaned,
+  String dustLevel = 'medium',
+  bool hasPets = false,
+  int dailyUsageHours = 4,
+}) {
+  final idealInterval = _adjustedIdealInterval(
+    dustLevel: dustLevel,
+    hasPets: hasPets,
+    dailyUsageHours: dailyUsageHours,
+  );
+  return idealInterval - daysSinceLastCleaned;
 }
 
 /// A simple 0-100 score. Starts at 100 and drops as:
@@ -35,7 +82,7 @@ int calculateHealthScore({
 }) {
   double score = 100;
 
-  final overdueBy = daysSinceLastCleaned - _idealCleaningIntervalDays;
+  final overdueBy = daysSinceLastCleaned - _baseCleaningIntervalDays;
   if (overdueBy > 0) {
     // Lose up to 40 points as cleaning gets more overdue, capped so
     // one very old PC doesn't return a nonsensical negative score.
