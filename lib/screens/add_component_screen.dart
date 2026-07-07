@@ -21,6 +21,7 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
   final _serialController = TextEditingController();
   String _category = componentCategories.first;
   DateTime? _manufacturingDate;
+  DateTime? _warrantyDate;
   bool _isSaving = false;
   String? _errorMessage;
 
@@ -33,6 +34,18 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
     );
     if (picked != null) {
       setState(() => _manufacturingDate = picked);
+    }
+  }
+
+  Future<void> _pickWarrantyDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() => _warrantyDate = picked);
     }
   }
 
