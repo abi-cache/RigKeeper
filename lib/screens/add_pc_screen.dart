@@ -15,6 +15,9 @@ class AddPcScreen extends StatefulWidget {
 
 class _AddPcScreenState extends State<AddPcScreen> {
   final _nameController = TextEditingController();
+  String _dustLevel = 'medium';
+  bool _hasPets = false;
+  int _dailyUsageHours = 4;
   bool _isSaving = false;
   String? _errorMessage;
 
@@ -35,6 +38,9 @@ class _AddPcScreenState extends State<AddPcScreen> {
       await supabase.from('pcs').insert({
         'user_id': userId,
         'name': name,
+        'dust_level': _dustLevel,
+        'has_pets': _hasPets,
+        'daily_usage_hours': _dailyUsageHours,
       });
 
       if (mounted) {
@@ -74,6 +80,47 @@ class _AddPcScreenState extends State<AddPcScreen> {
                 border: OutlineInputBorder(),
               ),
               autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            Text('Environment (used for smarter predictions)',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade600)),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              initialValue: _dustLevel,
+              decoration: const InputDecoration(
+                labelText: 'Dust level in the room',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'low', child: Text('Low')),
+                DropdownMenuItem(value: 'medium', child: Text('Medium')),
+                DropdownMenuItem(value: 'high', child: Text('High')),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _dustLevel = value);
+              },
+            ),
+            const SizedBox(height: 12),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Pets in the home'),
+              value: _hasPets,
+              onChanged: (value) => setState(() => _hasPets = value),
+            ),
+            const SizedBox(height: 4),
+            Text('Average daily usage: $_dailyUsageHours hrs',
+                style: const TextStyle(fontSize: 13)),
+            Slider(
+              value: _dailyUsageHours.toDouble(),
+              min: 0,
+              max: 16,
+              divisions: 16,
+              label: '$_dailyUsageHours hrs',
+              onChanged: (value) =>
+                  setState(() => _dailyUsageHours = value.round()),
             ),
             if (_errorMessage != null) ...[
               const SizedBox(height: 8),
