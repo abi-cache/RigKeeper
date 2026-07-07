@@ -26,18 +26,25 @@ class VirtualPc {
   });
 
   /// Builds a VirtualPc from a row returned by Supabase.
-  /// The stats fields are hardcoded placeholders for now — they'll
-  /// come from real queries once the Components/Maintenance Log
-  /// tables exist.
-  factory VirtualPc.fromMap(Map<String, dynamic> map) {
+  /// Stats fields (componentCount, healthScore, etc) are passed in
+  /// separately, since they require querying OTHER tables
+  /// (components, maintenance_logs) — this factory just handles the
+  /// pcs row itself.
+  factory VirtualPc.fromMap(
+    Map<String, dynamic> map, {
+    int componentCount = 0,
+    int healthScore = 100,
+    int lastCleanedDaysAgo = 0,
+    int nextCleaningInDays = 30,
+  }) {
     return VirtualPc(
       id: map['id'] as String,
       name: map['name'] as String,
       icon: Icons.desktop_windows_outlined,
-      componentCount: 0,
-      healthScore: 100,
-      lastCleanedDaysAgo: 0,
-      nextCleaningInDays: 30,
+      componentCount: componentCount,
+      healthScore: healthScore,
+      lastCleanedDaysAgo: lastCleanedDaysAgo,
+      nextCleaningInDays: nextCleaningInDays,
     );
   }
 
