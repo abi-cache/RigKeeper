@@ -3,6 +3,7 @@ import '../models/virtual_pc.dart';
 import '../widgets/pc_card.dart';
 import 'pc_detail_screen.dart';
 import 'add_pc_screen.dart';
+import 'profile_screen.dart';
 import '../main.dart';
 import '../services/maintenance_prediction.dart';
 
@@ -155,6 +156,16 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         title: const Text('RigKeeper'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Profile',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Log out',
