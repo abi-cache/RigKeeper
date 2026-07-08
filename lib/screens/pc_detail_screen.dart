@@ -162,7 +162,7 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                                 alignment: Alignment.centerRight,
                                 padding: const EdgeInsets.only(right: 16),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.shade400,
+                                  color: Theme.of(context).colorScheme.error,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 margin: const EdgeInsets.only(bottom: 8),
@@ -227,8 +227,8 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: c.warrantyDaysLeft! < 0
-                                                ? Colors.red
-                                                : Colors.green.shade700,
+                                                ? Theme.of(context).colorScheme.error
+                                                : Theme.of(context).colorScheme.primary,
                                           ),
                                         ),
                                       if (c.notes != null &&
