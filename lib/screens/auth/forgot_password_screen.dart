@@ -86,7 +86,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 Text(
                   _message!,
                   style: TextStyle(
-                    color: _success ? Colors.green.shade700 : Colors.red,
+                    color: _success ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error,
                   ),
                 ),
               ],
