@@ -215,14 +215,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
+                    color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.orange.shade200),
+                    border: Border.all(color: Theme.of(context).colorScheme.tertiary),
                   ),
                   child: Row(
                     children: [
                       Icon(Icons.notifications_active_outlined,
-                          size: 18, color: Colors.orange.shade800),
+                          size: 18, color: Theme.of(context).colorScheme.tertiary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -230,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ? '1 PC is due for cleaning'
                               : '$_overdueCount PCs are due for cleaning',
                           style: TextStyle(
-                              fontSize: 13, color: Colors.orange.shade900),
+                              fontSize: 13, color: Theme.of(context).colorScheme.onTertiaryContainer),
                         ),
                       ),
                     ],
@@ -334,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.only(right: 20),
                             decoration: BoxDecoration(
-                              color: Colors.red.shade400,
+                              color: Theme.of(context).colorScheme.error,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             margin: const EdgeInsets.only(bottom: 12),
