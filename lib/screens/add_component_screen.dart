@@ -241,7 +241,7 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 'You can also set the date manually above if detection doesn\'t work.',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ),
             if (_errorMessage != null) ...[
