@@ -220,7 +220,7 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   '⚠ Estimated, not confirmed: $_decodeNote',
-                  style: TextStyle(fontSize: 11, color: Colors.orange.shade800),
+                  style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.tertiary),
                 ),
               ),
             const SizedBox(height: 12),
@@ -263,7 +263,7 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
             ),
             if (_errorMessage != null) ...[
               const SizedBox(height: 8),
-              Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+              Text(_errorMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ],
             const SizedBox(height: 20),
             ElevatedButton(
