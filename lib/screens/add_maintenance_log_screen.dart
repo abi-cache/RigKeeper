@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
 import '../models/maintenance_log.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddMaintenanceLogScreen extends StatefulWidget {
   final String pcId;
@@ -131,9 +131,9 @@ class _AddMaintenanceLogScreenState extends State<AddMaintenanceLogScreen> {
         child: Container(
           height: 120,
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
           ),
           child: bytes != null
               ? ClipRRect(
@@ -144,11 +144,11 @@ class _AddMaintenanceLogScreenState extends State<AddMaintenanceLogScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.add_a_photo_outlined,
-                        color: Colors.grey.shade500),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
                     const SizedBox(height: 4),
                     Text(label,
                         style: TextStyle(
-                            fontSize: 12, color: Colors.grey.shade600)),
+                            fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                   ],
                 ),
         ),
@@ -191,7 +191,7 @@ class _AddMaintenanceLogScreenState extends State<AddMaintenanceLogScreen> {
                 style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade600)),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: 8),
             Row(
               children: [
