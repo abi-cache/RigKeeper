@@ -179,6 +179,21 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                                                 : Colors.green.shade700,
                                           ),
                                         ),
+                                      if (c.notes != null &&
+                                          c.notes!.isNotEmpty)
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 2),
+                                          child: Text(
+                                            c.notes!,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ),
                                       if (c.isApproachingLifespan)
                                         Padding(
                                           padding:
