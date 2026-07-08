@@ -33,6 +33,7 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
       text: widget.existingComponent?.name ?? '');
   final _serialController = TextEditingController();
   final _brandController = TextEditingController();
+  final _notesController = TextEditingController();
   late String _category =
       widget.existingComponent?.category ?? componentCategories.first;
   DateTime? _manufacturingDate;
@@ -50,6 +51,7 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
     final existing = widget.existingComponent;
     if (existing != null) {
       _serialController.text = existing.serialNumber ?? '';
+      _notesController.text = existing.notes ?? '';
       _manufacturingDate = existing.manufacturingDate;
       _warrantyDate = existing.warrantyExpiration;
     }
@@ -123,6 +125,9 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
             : _serialController.text.trim(),
         'manufacturing_date': _manufacturingDate?.toIso8601String(),
         'warranty_expiration': _warrantyDate?.toIso8601String(),
+        'notes': _notesController.text.trim().isEmpty
+            ? null
+            : _notesController.text.trim(),
       };
 
       if (_isEditing) {
@@ -151,6 +156,7 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
     _nameController.dispose();
     _serialController.dispose();
     _brandController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -159,7 +165,7 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
     return Scaffold(
       appBar: AppBar(
           title: Text(_isEditing ? 'Edit component' : 'Add a component')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -242,6 +248,17 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
               child: Text(
                 'You can also set the date manually above if detection doesn\'t work.',
                 style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _notesController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Notes (optional)',
+                hintText: 'e.g. Bought secondhand, slight coil whine',
+                border: OutlineInputBorder(),
+                alignLabelWithHint: true,
               ),
             ),
             if (_errorMessage != null) ...[
