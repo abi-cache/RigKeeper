@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
               Text('Log in to your PCs',
-                  style: TextStyle(color: Colors.grey.shade600)),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
               const SizedBox(height: 32),
               TextField(
                 controller: _emailController,
