@@ -100,8 +100,13 @@ class _HomeScreenState extends State<HomeScreen> {
         healthScore: healthScore,
         lastCleanedDaysAgo: daysSinceLastCleaned,
         nextCleaningInDays: nextCleaningInDays,
+        averageComponentAgeYears: averageAge,
       ));
     }
+
+    // Most urgent (soonest / most overdue cleaning) shown first.
+    loadedPcs.sort(
+        (a, b) => a.nextCleaningInDays.compareTo(b.nextCleaningInDays));
 
     setState(() {
       _pcs = loadedPcs;

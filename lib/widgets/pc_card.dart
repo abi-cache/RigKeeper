@@ -63,7 +63,13 @@ class PcCard extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _StatBox(label: 'Health score', value: '${pc.healthScore}')),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _showScoreExplanation(context, pc),
+                    child: _StatBox(
+                        label: 'Health score  ⓘ', value: '${pc.healthScore}'),
+                  ),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                     child: _StatBox(
@@ -72,6 +78,38 @@ class PcCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showScoreExplanation(BuildContext context, VirtualPc pc) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('How this score is calculated'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+                'This is a simple, transparent rule-based score — '
+                'not a black box. It starts at 100 and subtracts points for:'),
+            const SizedBox(height: 12),
+            Text('• Cleaning recency: last cleaned ${pc.lastCleanedDaysAgo} days ago'
+                '${pc.lastCleanedDaysAgo > 60 ? ' (overdue, points deducted)' : ' (on track)'}'),
+            const SizedBox(height: 6),
+            Text('• Component age: averaging ${pc.averageComponentAgeYears.toStringAsFixed(1)} '
+                'years old${pc.averageComponentAgeYears > 3 ? ' (points deducted for aging parts)' : ' (relatively new)'}'),
+            const SizedBox(height: 12),
+            Text('Final score: ${pc.healthScore} / 100',
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Got it')),
+        ],
       ),
     );
   }

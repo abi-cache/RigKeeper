@@ -14,6 +14,7 @@ class VirtualPc {
   final int healthScore; // 0-100
   final int lastCleanedDaysAgo;
   final int nextCleaningInDays;
+  final double averageComponentAgeYears;
 
   const VirtualPc({
     this.id,
@@ -23,6 +24,7 @@ class VirtualPc {
     required this.healthScore,
     required this.lastCleanedDaysAgo,
     required this.nextCleaningInDays,
+    this.averageComponentAgeYears = 0,
   });
 
   /// Builds a VirtualPc from a row returned by Supabase.
@@ -36,6 +38,7 @@ class VirtualPc {
     int healthScore = 100,
     int lastCleanedDaysAgo = 0,
     int nextCleaningInDays = 30,
+    double averageComponentAgeYears = 0,
   }) {
     return VirtualPc(
       id: map['id'] as String,
@@ -45,6 +48,7 @@ class VirtualPc {
       healthScore: healthScore,
       lastCleanedDaysAgo: lastCleanedDaysAgo,
       nextCleaningInDays: nextCleaningInDays,
+      averageComponentAgeYears: averageComponentAgeYears,
     );
   }
 
