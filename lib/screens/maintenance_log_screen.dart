@@ -56,7 +56,7 @@ class _MaintenanceLogScreenState extends State<MaintenanceLogScreen> {
                       ? Center(
                           child: Text(
                             'No maintenance logged yet.',
-                            style: TextStyle(color: Colors.grey.shade600),
+                            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                           ),
                         )
                       : ListView.builder(
@@ -67,10 +67,10 @@ class _MaintenanceLogScreenState extends State<MaintenanceLogScreen> {
                               margin: const EdgeInsets.only(bottom: 10),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                    color: Colors.grey.shade300, width: 0.5),
+                                    color: Theme.of(context).colorScheme.outlineVariant, width: 0.5),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +86,7 @@ class _MaintenanceLogScreenState extends State<MaintenanceLogScreen> {
                                         '${log.logDate.year}-${log.logDate.month.toString().padLeft(2, '0')}-${log.logDate.day.toString().padLeft(2, '0')}',
                                         style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.grey.shade600),
+                                            color: Theme.of(context).colorScheme.onSurfaceVariant),
                                       ),
                                     ],
                                   ),
@@ -96,7 +96,7 @@ class _MaintenanceLogScreenState extends State<MaintenanceLogScreen> {
                                     Text(log.notes!,
                                         style: TextStyle(
                                             fontSize: 13,
-                                            color: Colors.grey.shade700)),
+                                            color: Theme.of(context).colorScheme.onSurfaceVariant)),
                                   ],
                                   if (log.beforePhotoUrl != null ||
                                       log.afterPhotoUrl != null) ...[
