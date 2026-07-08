@@ -1,20 +1,81 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
 
-/// Simple account overview — email, member-since date, and a
-/// dedicated place for logout (in addition to the quick icon on
-/// Home). Kept intentionally minimal for now; a natural next step
-/// would be adding a display name / avatar, but that needs its own
-/// small `profiles` table since Supabase's built-in user table only
-/// stores auth fields like email, not custom profile data.
-class ProfileScreen extends StatelessWidget {
+/// Account overview — username (editable), email, member-since date,
+/// appearance settings, and logout.
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isSaving = false;
+
+  String get _username {
+    final user = supabase.auth.currentUser;
+    final username = user?.userMetadata?['username'] as String?;
+    if (username != null && username.isNotEmpty) return username;
+    return user?.email?.split('@').first ?? 'Unknown';
+  }
+
+  Future<void> _editUsername() async {
+    final controller = TextEditingController(text: _username);
+
+    final newUsername = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit username'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Username',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (newUsername == null || newUsername.isEmpty) return;
+
+    setState(() => _isSaving = true);
+    try {
+      // Supabase re-fetches and updates the current user's metadata
+      // in place — this is the same `data` field we set at sign-up,
+      // just updated after the fact rather than only at creation.
+      await supabase.auth.updateUser(
+        UserAttributes(data: {'username': newUsername}),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Couldn't update username. Try again.")),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = supabase.auth.currentUser;
     final createdAt =
         user?.createdAt != null ? DateTime.parse(user!.createdAt) : null;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
@@ -25,18 +86,38 @@ class ProfileScreen extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 32,
-              backgroundColor: Colors.blue.shade50,
-              child: Icon(Icons.person, size: 32, color: Colors.blue.shade700),
+              backgroundColor: scheme.primaryContainer,
+              child: Icon(Icons.person, size: 32, color: scheme.onPrimaryContainer),
             ),
             const SizedBox(height: 16),
-            Text(user?.email ?? 'Unknown',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            Row(
+              children: [
+                Text(_username,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.w600)),
+                const SizedBox(width: 8),
+                _isSaving
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: scheme.primary),
+                      )
+                    : GestureDetector(
+                        onTap: _editUsername,
+                        child: Icon(Icons.edit_outlined,
+                            size: 18, color: scheme.onSurfaceVariant),
+                      ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(user?.email ?? '',
+                style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant)),
             if (createdAt != null) ...[
               const SizedBox(height: 4),
               Text(
                 'Member since ${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')}',
-                style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
               ),
             ],
             const SizedBox(height: 32),
@@ -44,7 +125,7 @@ class ProfileScreen extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    color: scheme.onSurfaceVariant)),
             const SizedBox(height: 8),
             ValueListenableBuilder<ThemeMode>(
               valueListenable: themeModeNotifier,
@@ -78,9 +159,8 @@ class ProfileScreen extends StatelessWidget {
                 onPressed: () async {
                   await supabase.auth.signOut();
                 },
-                icon: const Icon(Icons.logout, color: Colors.red),
-                label: const Text('Log out',
-                    style: TextStyle(color: Colors.red)),
+                icon: Icon(Icons.logout, color: scheme.error),
+                label: Text('Log out', style: TextStyle(color: scheme.error)),
               ),
             ),
           ],
