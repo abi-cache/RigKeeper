@@ -72,12 +72,12 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(widget.pc.name),
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -88,7 +88,7 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                 style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade600)),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: 8),
             Expanded(
               child: _isLoading
@@ -98,7 +98,7 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                           child: Text(
                             'No components yet.\nAdd your CPU, GPU, RAM, etc. below.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey.shade600),
+                            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                           ),
                         )
                       : ListView.builder(
@@ -142,10 +142,10 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                                 child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                    color: Colors.grey.shade300, width: 0.5),
+                                    color: Theme.of(context).colorScheme.outlineVariant, width: 0.5),
                               ),
                               child: Row(
                                 mainAxisAlignment:
@@ -165,7 +165,7 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                                             : '${c.category} · age unknown',
                                         style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.grey.shade600),
+                                            color: Theme.of(context).colorScheme.onSurfaceVariant),
                                       ),
                                       if (c.warrantyDaysLeft != null)
                                         Text(
@@ -195,7 +195,7 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                                     ],
                                   ),
                                   Icon(Icons.chevron_right,
-                                      color: Colors.grey.shade400, size: 20),
+                                      color: Theme.of(context).colorScheme.outline, size: 20),
                                 ],
                               ),
                               ),
