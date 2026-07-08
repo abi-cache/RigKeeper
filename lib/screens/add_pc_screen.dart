@@ -86,7 +86,7 @@ class _AddPcScreenState extends State<AddPcScreen> {
                 style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade600)),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               initialValue: _dustLevel,
