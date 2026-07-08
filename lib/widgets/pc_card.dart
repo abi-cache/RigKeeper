@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/virtual_pc.dart';
+import '../theme/app_theme.dart';
+import 'health_ring.dart';
 
 /// Displays a single PC as a tappable card.
 ///
@@ -27,65 +29,33 @@ class PcCard extends StatelessWidget {
           border:
               Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: pc.imageUrl != null
-                          ? Image.network(pc.imageUrl!, fit: BoxFit.cover)
-                          : Icon(pc.icon,
-                              size: 20,
-                              color:
-                                  Theme.of(context).colorScheme.onPrimaryContainer),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(pc.name,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w500, fontSize: 15)),
-                        Text('${pc.componentCount} components',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant)),
-                      ],
-                    ),
-                  ],
-                ),
-                _CleaningBadge(pc: pc),
-              ],
+            GestureDetector(
+              onTap: () => _showScoreExplanation(context, pc),
+              child: HealthRing(score: pc.healthScore),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showScoreExplanation(context, pc),
-                    child: _StatBox(
-                        label: 'Health score  ⓘ', value: '${pc.healthScore}'),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(pc.name,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w500, fontSize: 15)),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${pc.componentCount} components',
+                    style: AppTheme.dataStyle.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: _StatBox(
-                        label: 'Last cleaned', value: '${pc.lastCleanedDaysAgo}d ago')),
-              ],
+                ],
+              ),
             ),
+            _CleaningBadge(pc: pc),
           ],
         ),
       ),
@@ -125,68 +95,39 @@ class PcCard extends StatelessWidget {
   }
 }
 
-/// Small "Clean in Xd" pill. Color depends on [VirtualPc.urgency].
+/// "Clean in Xd" pill — color follows the same thermal scale as
+/// everything else in the app (see AppTheme): primary/teal when
+/// healthy, tertiary/amber approaching, error/coral overdue. Never a
+/// raw Colors.orange/red — that consistency is what makes the color
+/// language legible across the whole app.
 class _CleaningBadge extends StatelessWidget {
   final VirtualPc pc;
   const _CleaningBadge({required this.pc});
 
   @override
   Widget build(BuildContext context) {
-    late Color bg;
+    final scheme = Theme.of(context).colorScheme;
     late Color fg;
     switch (pc.urgency) {
       case CleaningUrgency.healthy:
-        bg = Colors.green.shade50;
-        fg = Colors.green.shade800;
+        fg = scheme.primary;
         break;
       case CleaningUrgency.dueSoon:
-        bg = Colors.orange.shade50;
-        fg = Colors.orange.shade800;
+        fg = scheme.tertiary;
         break;
       case CleaningUrgency.overdueSoon:
-        bg = Colors.red.shade50;
-        fg = Colors.red.shade800;
+        fg = scheme.error;
         break;
     }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
-      child: Text(
-        'Clean in ${pc.nextCleaningInDays}d',
-        style: TextStyle(fontSize: 12, color: fg, fontWeight: FontWeight.w500),
-      ),
-    );
-  }
-}
-
-/// Small stat tile used inside the card (health score, last cleaned, etc).
-class _StatBox extends StatelessWidget {
-  final String label;
-  final String value;
-  const _StatBox({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
+        color: fg.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: TextStyle(
-                  fontSize: 11,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          const SizedBox(height: 2),
-          Text(value,
-              style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: Theme.of(context).colorScheme.onSurface)),
-        ],
+      child: Text(
+        '${pc.nextCleaningInDays}d',
+        style: AppTheme.dataStyle.copyWith(fontSize: 12, color: fg),
       ),
     );
   }
