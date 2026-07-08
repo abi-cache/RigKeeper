@@ -39,10 +39,16 @@ class PcCard extends StatelessWidget {
                       width: 38,
                       height: 38,
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: Theme.of(context).colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(pc.icon, size: 20, color: Colors.blue.shade700),
+                      clipBehavior: Clip.antiAlias,
+                      child: pc.imageUrl != null
+                          ? Image.network(pc.imageUrl!, fit: BoxFit.cover)
+                          : Icon(pc.icon,
+                              size: 20,
+                              color:
+                                  Theme.of(context).colorScheme.onPrimaryContainer),
                     ),
                     const SizedBox(width: 10),
                     Column(
