@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<VirtualPc> _pcs = [];
   bool _isLoading = true;
   int _overdueCount = 0;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -222,58 +223,95 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               const SizedBox(height: 4),
+              if (_pcs.length > 1 || _searchQuery.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: TextField(
+                    onChanged: (value) =>
+                        setState(() => _searchQuery = value),
+                    decoration: InputDecoration(
+                      hintText: 'Search your PCs...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      isDense: true,
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
               Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _pcs.isEmpty
-                        ? Center(
-                            child: Text(
-                              'No PCs yet — add your first one below.',
-                              style: TextStyle(color: Colors.grey.shade600),
+                child: Builder(builder: (context) {
+                  final filteredPcs = _searchQuery.isEmpty
+                      ? _pcs
+                      : _pcs
+                          .where((pc) => pc.name
+                              .toLowerCase()
+                              .contains(_searchQuery.toLowerCase()))
+                          .toList();
+
+                  if (_isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (_pcs.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No PCs yet — add your first one below.',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    );
+                  }
+                  if (filteredPcs.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No PCs match "$_searchQuery".',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    );
+                  }
+
+                  return RefreshIndicator(
+                    onRefresh: _loadPcs,
+                    child: ListView.builder(
+                      itemCount: filteredPcs.length,
+                      itemBuilder: (context, index) {
+                        final pc = filteredPcs[index];
+                        return Dismissible(
+                          key: Key(pc.id!),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade400,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadPcs,
-                            child: ListView.builder(
-                              itemCount: _pcs.length,
-                              itemBuilder: (context, index) {
-                                final pc = _pcs[index];
-                                return Dismissible(
-                                  key: Key(pc.id!),
-                                  direction: DismissDirection.endToStart,
-                                  background: Container(
-                                    alignment: Alignment.centerRight,
-                                    padding:
-                                        const EdgeInsets.only(right: 20),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.shade400,
-                                      borderRadius:
-                                          BorderRadius.circular(12),
-                                    ),
-                                    margin:
-                                        const EdgeInsets.only(bottom: 12),
-                                    child: const Icon(Icons.delete,
-                                        color: Colors.white),
-                                  ),
-                                  onDismissed: (direction) {
-                                    _deletePcWithUndo(pc, index);
-                                  },
-                                  child: PcCard(
-                                    pc: pc,
-                                    onTap: () async {
-                                      await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                PcDetailScreen(pc: pc)),
-                                      );
-                                      _loadPcs();
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child:
+                                const Icon(Icons.delete, color: Colors.white),
                           ),
+                          onDismissed: (direction) {
+                            _deletePcWithUndo(
+                                pc, _pcs.indexWhere((p) => p.id == pc.id));
+                          },
+                          child: PcCard(
+                            pc: pc,
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        PcDetailScreen(pc: pc)),
+                              );
+                              _loadPcs();
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
