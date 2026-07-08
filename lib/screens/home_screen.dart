@@ -156,9 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        backgroundColor: Colors.grey.shade50,
         elevation: 0,
         title: const Text('RigKeeper'),
         actions: [
@@ -189,7 +187,9 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const SizedBox(height: 8),
               Text('Good evening',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
               const SizedBox(height: 2),
               const Text('Your PCs',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
@@ -258,7 +258,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     return Center(
                       child: Text(
                         'No PCs yet — add your first one below.',
-                        style: TextStyle(color: Colors.grey.shade600),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                     );
                   }
@@ -266,7 +267,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     return Center(
                       child: Text(
                         'No PCs match "$_searchQuery".',
-                        style: TextStyle(color: Colors.grey.shade600),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                     );
                   }
