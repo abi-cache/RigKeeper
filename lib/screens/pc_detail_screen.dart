@@ -69,6 +69,36 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
     });
   }
 
+  /// Builds a flat list mixing category header strings and Component
+  /// objects, grouped in the same order as [componentCategories] so
+  /// the layout stays predictable (CPU always before RAM, etc), with
+  /// any leftover custom categories appended at the end.
+  List<dynamic> get _groupedItems {
+    final items = <dynamic>[];
+    final usedCategories = <String>{};
+
+    for (final category in componentCategories) {
+      final inCategory =
+          _components.where((c) => c.category == category).toList();
+      if (inCategory.isEmpty) continue;
+      items.add(category);
+      items.addAll(inCategory);
+      usedCategories.add(category);
+    }
+
+    // Catch anything with a category not in the known list (shouldn't
+    // normally happen since the dropdown restricts input, but this
+    // keeps the screen from silently dropping data if it ever does).
+    final leftover =
+        _components.where((c) => !usedCategories.contains(c.category));
+    if (leftover.isNotEmpty) {
+      items.add('Other');
+      items.addAll(leftover);
+    }
+
+    return items;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,9 +132,29 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                           ),
                         )
                       : ListView.builder(
-                          itemCount: _components.length,
+                          itemCount: _groupedItems.length,
                           itemBuilder: (context, index) {
-                            final c = _components[index];
+                            final item = _groupedItems[index];
+
+                            if (item is String) {
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                    top: index == 0 ? 0 : 12, bottom: 6),
+                                child: Text(
+                                  item.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary,
+                                  ),
+                                ),
+                              );
+                            }
+
+                            final c = item as Component;
                             return Dismissible(
                               key: Key(c.id),
                               direction: DismissDirection.endToStart,
@@ -120,7 +170,9 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                                     color: Colors.white, size: 20),
                               ),
                               onDismissed: (direction) {
-                                _deleteComponentWithUndo(c, index);
+                                final realIndex = _components
+                                    .indexWhere((comp) => comp.id == c.id);
+                                _deleteComponentWithUndo(c, realIndex);
                               },
                               child: Container(
                               margin: const EdgeInsets.only(bottom: 8),
@@ -161,8 +213,8 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                                               fontWeight: FontWeight.w500)),
                                       Text(
                                         c.ageInYears != null
-                                            ? '${c.category} · ${c.ageInYears} yrs old'
-                                            : '${c.category} · age unknown',
+                                            ? '${c.ageInYears} yrs old'
+                                            : 'Age unknown',
                                         style: TextStyle(
                                             fontSize: 12,
                                             color: Theme.of(context).colorScheme.onSurfaceVariant),
