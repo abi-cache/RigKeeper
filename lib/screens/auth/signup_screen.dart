@@ -18,35 +18,55 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   String? _message;
+  bool _isError = false;
 
   Future<void> _signUp() async {
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (password.length < 6) {
+      setState(() {
+        _isError = true;
+        _message = 'Password must be at least 6 characters.';
+      });
+      return;
+    }
+
+    if (password != confirmPassword) {
+      setState(() {
+        _isError = true;
+        _message = "Passwords don't match.";
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
+      _isError = false;
       _message = null;
     });
 
     try {
       await supabase.auth.signUp(
         email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+        password: password,
       );
-      if (!mounted) return;
       setState(() {
+        _isError = false;
         _message = 'Account created! Check your email to confirm, then log in.';
       });
     } catch (e) {
-      if (!mounted) return;
       setState(() {
+        _isError = true;
         _message = 'Sign up failed: ${e.toString()}';
       });
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -54,6 +74,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -85,9 +106,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm password',
+                  border: OutlineInputBorder(),
+                ),
+              ),
               if (_message != null) ...[
                 const SizedBox(height: 12),
-                Text(_message!, style: const TextStyle(color: Colors.blueGrey)),
+                Text(
+                  _message!,
+                  style: TextStyle(
+                    color: _isError
+                        ? Theme.of(context).colorScheme.error
+                        : Colors.green.shade700,
+                  ),
+                ),
               ],
               const SizedBox(height: 20),
               ElevatedButton(
