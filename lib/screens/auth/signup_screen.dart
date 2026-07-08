@@ -16,6 +16,7 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -24,8 +25,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isError = false;
 
   Future<void> _signUp() async {
+    final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (username.isEmpty) {
+      setState(() {
+        _isError = true;
+        _message = 'Enter a username.';
+      });
+      return;
+    }
 
     if (password.length < 6) {
       setState(() {
@@ -50,9 +60,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
+      // The username is stored in Supabase's built-in user metadata
+      // (the `data` field below) rather than a separate database
+      // table — Supabase already provides this exact spot for small
+      // profile-ish fields like this, so there's no need for extra
+      // SQL or a new table just to hold one string.
       await supabase.auth.signUp(
         email: _emailController.text.trim(),
         password: password,
+        data: {'username': username},
       );
       setState(() {
         _isError = false;
@@ -72,6 +88,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -89,6 +106,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 16),
+              TextField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -122,7 +147,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   style: TextStyle(
                     color: _isError
                         ? Theme.of(context).colorScheme.error
-                        : Colors.green.shade700,
+                        : Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],
