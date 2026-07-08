@@ -21,6 +21,31 @@ class _HomeScreenState extends State<HomeScreen> {
   int _warrantyExpiringCount = 0;
   String _searchQuery = '';
 
+  /// Builds a greeting based on the actual current hour (not a fixed
+  /// string) plus the signed-in user's username, pulled from
+  /// Supabase's user metadata. Falls back to the part of their email
+  /// before the @ if no username was ever set (e.g. older accounts
+  /// created before this field existed).
+  String get _greeting {
+    final hour = DateTime.now().hour;
+    final String timeOfDay;
+    if (hour < 12) {
+      timeOfDay = 'Good morning';
+    } else if (hour < 18) {
+      timeOfDay = 'Good afternoon';
+    } else {
+      timeOfDay = 'Good evening';
+    }
+
+    final user = supabase.auth.currentUser;
+    final username = user?.userMetadata?['username'] as String?;
+    final displayName = (username != null && username.isNotEmpty)
+        ? username
+        : user?.email?.split('@').first ?? '';
+
+    return displayName.isEmpty ? timeOfDay : '$timeOfDay, $displayName';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -200,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              Text('Good evening',
+              Text(_greeting,
                   style: TextStyle(
                       fontSize: 13,
                       color: Theme.of(context).colorScheme.onSurfaceVariant)),
