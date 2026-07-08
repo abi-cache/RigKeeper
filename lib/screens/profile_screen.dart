@@ -36,7 +36,7 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 'Member since ${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')}',
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ],
             const SizedBox(height: 32),
@@ -44,7 +44,7 @@ class ProfileScreen extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade600)),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: 8),
             ValueListenableBuilder<ThemeMode>(
               valueListenable: themeModeNotifier,
