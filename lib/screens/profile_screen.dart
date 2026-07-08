@@ -40,6 +40,38 @@ class ProfileScreen extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 32),
+            Text('Appearance',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade600)),
+            const SizedBox(height: 8),
+            ValueListenableBuilder<ThemeMode>(
+              valueListenable: themeModeNotifier,
+              builder: (context, mode, _) {
+                return SegmentedButton<ThemeMode>(
+                  segments: const [
+                    ButtonSegment(
+                        value: ThemeMode.light,
+                        icon: Icon(Icons.light_mode, size: 18),
+                        label: Text('Light')),
+                    ButtonSegment(
+                        value: ThemeMode.dark,
+                        icon: Icon(Icons.dark_mode, size: 18),
+                        label: Text('Dark')),
+                    ButtonSegment(
+                        value: ThemeMode.system,
+                        icon: Icon(Icons.brightness_auto, size: 18),
+                        label: Text('Auto')),
+                  ],
+                  selected: {mode},
+                  onSelectionChanged: (newSelection) {
+                    themeModeNotifier.value = newSelection.first;
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
