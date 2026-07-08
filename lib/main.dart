@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/auth_gate.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   // Flutter needs this when doing async work (like connecting to
@@ -45,17 +46,8 @@ class PcMaintenanceApp extends StatelessWidget {
           title: 'PC Maintenance Tracker',
           debugShowCheckedModeBanner: false,
           themeMode: mode,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-            useMaterial3: true,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.blue,
-              brightness: Brightness.dark,
-            ),
-            useMaterial3: true,
-          ),
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
           // AuthGate decides whether to show Login or Home, instead of
           // going straight to HomeScreen like before.
           home: const AuthGate(),
