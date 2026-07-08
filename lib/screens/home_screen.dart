@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<VirtualPc> _pcs = [];
   bool _isLoading = true;
   int _overdueCount = 0;
+  int _warrantyExpiringCount = 0;
   String _searchQuery = '';
 
   @override
@@ -46,12 +47,24 @@ class _HomeScreenState extends State<HomeScreen> {
         .order('created_at');
 
     final List<VirtualPc> loadedPcs = [];
+    int warrantyExpiringCount = 0;
 
     for (final pcRow in pcRows) {
       final pcId = pcRow['id'] as String;
 
       final componentRows =
           await supabase.from('components').select().eq('pc_id', pcId);
+
+      // Reuse this same fetch to also count components whose
+      // warranty is expiring within 30 days or already expired —
+      // avoids a second round of queries just for this.
+      for (final comp in componentRows) {
+        final warrantyStr = comp['warranty_expiration'] as String?;
+        if (warrantyStr == null) continue;
+        final daysLeft =
+            DateTime.parse(warrantyStr).difference(DateTime.now()).inDays;
+        if (daysLeft <= 30) warrantyExpiringCount++;
+      }
 
       final logRows = await supabase
           .from('maintenance_logs')
@@ -113,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _pcs = loadedPcs;
       _overdueCount =
           loadedPcs.where((pc) => pc.nextCleaningInDays <= 0).length;
+      _warrantyExpiringCount = warrantyExpiringCount;
       _isLoading = false;
     });
   }
@@ -217,6 +231,40 @@ class _HomeScreenState extends State<HomeScreen> {
                               : '$_overdueCount PCs are due for cleaning',
                           style: TextStyle(
                               fontSize: 13, color: Colors.orange.shade900),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (!_isLoading && _warrantyExpiringCount > 0)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .errorContainer
+                        .withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: Theme.of(context).colorScheme.error),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.shield_outlined,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.error),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _warrantyExpiringCount == 1
+                              ? '1 component\'s warranty is expiring soon or has expired'
+                              : '$_warrantyExpiringCount components\' warranties are expiring soon or have expired',
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).colorScheme.error),
                         ),
                       ),
                     ],
