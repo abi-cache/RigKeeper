@@ -69,7 +69,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             children: [
               Text(
                 'Enter the email on your account and we\'ll send a link to reset your password.',
-                style: TextStyle(color: Colors.grey.shade700),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 20),
               TextField(
