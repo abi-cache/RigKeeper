@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../main.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
@@ -18,11 +19,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  bool _showResendConfirmation = false;
+  bool _isResending = false;
 
   Future<void> _signIn() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _showResendConfirmation = false;
     });
 
     try {
@@ -31,14 +35,46 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
       // No navigation needed here — AuthGate handles it.
+    } on AuthException catch (e) {
+      // Supabase returns a specific message when the account exists
+      // but hasn't confirmed its email yet — worth distinguishing
+      // from "wrong password" since the fix is completely different
+      // (check inbox, not retype credentials).
+      final isUnconfirmed = e.message.toLowerCase().contains('confirm');
+      setState(() {
+        _errorMessage = isUnconfirmed
+            ? "Your email isn't confirmed yet. Check your inbox, or resend the confirmation email below."
+            : 'Login failed. Check your email and password.';
+        _showResendConfirmation = isUnconfirmed;
+      });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Login failed. Check your email and password.';
+        _errorMessage = 'Something went wrong. Try again in a moment.';
       });
     } finally {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _resendConfirmation() async {
+    setState(() => _isResending = true);
+    try {
+      await supabase.auth.resend(
+        type: OtpType.signup,
+        email: _emailController.text.trim(),
+      );
+      setState(() {
+        _errorMessage = 'Confirmation email resent — check your inbox.';
+        _showResendConfirmation = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Couldn't resend. Try again in a moment.";
+      });
+    } finally {
+      setState(() => _isResending = false);
     }
   }
 
@@ -84,7 +120,21 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               if (_errorMessage != null) ...[
                 const SizedBox(height: 12),
-                Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                Text(_errorMessage!,
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.error)),
+              ],
+              if (_showResendConfirmation) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: _isResending ? null : _resendConfirmation,
+                    child: Text(_isResending
+                        ? 'Resending...'
+                        : 'Resend confirmation email'),
+                  ),
+                ),
               ],
               Align(
                 alignment: Alignment.centerRight,
