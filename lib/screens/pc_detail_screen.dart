@@ -254,7 +254,7 @@ class _PcDetailScreenState extends State<PcDetailScreen> {
                                             '💡 Approaching typical lifespan (~${c.typicalLifespanYears}yrs for ${c.category}) — worth checking',
                                             style: TextStyle(
                                               fontSize: 11,
-                                              color: Colors.blueGrey.shade700,
+                                              color: Theme.of(context).colorScheme.tertiary,
                                               fontStyle: FontStyle.italic,
                                             ),
                                           ),
