@@ -1,4 +1,6 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../main.dart';
 
 /// Simple form to create a new PC row in Supabase.
@@ -21,6 +23,29 @@ class _AddPcScreenState extends State<AddPcScreen> {
   bool _isSaving = false;
   String? _errorMessage;
 
+  // Same bytes-based approach used for maintenance photos — works
+  // identically across web, Android, and iOS.
+  Uint8List? _photoBytes;
+  final _picker = ImagePicker();
+
+  Future<void> _pickPhoto() async {
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      imageQuality: 80,
+    );
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    setState(() => _photoBytes = bytes);
+  }
+
+  Future<String> _uploadPhoto(Uint8List bytes) async {
+    final fileName =
+        '${supabase.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+    await supabase.storage.from('pc-photos').uploadBinary(fileName, bytes);
+    return supabase.storage.from('pc-photos').getPublicUrl(fileName);
+  }
+
   Future<void> _savePc() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
@@ -35,12 +60,19 @@ class _AddPcScreenState extends State<AddPcScreen> {
 
     try {
       final userId = supabase.auth.currentUser!.id;
+
+      String? imageUrl;
+      if (_photoBytes != null) {
+        imageUrl = await _uploadPhoto(_photoBytes!);
+      }
+
       await supabase.from('pcs').insert({
         'user_id': userId,
         'name': name,
         'dust_level': _dustLevel,
         'has_pets': _hasPets,
         'daily_usage_hours': _dailyUsageHours,
+        'image_url': imageUrl,
       });
 
       if (mounted) {
@@ -67,11 +99,43 @@ class _AddPcScreenState extends State<AddPcScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Add a PC')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            GestureDetector(
+              onTap: _pickPhoto,
+              child: Container(
+                height: 140,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant),
+                ),
+                child: _photoBytes != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.memory(_photoBytes!, fit: BoxFit.cover, width: double.infinity),
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_a_photo_outlined,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          const SizedBox(height: 6),
+                          Text('Add a photo (optional)',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant)),
+                        ],
+                      ),
+              ),
+            ),
+            const SizedBox(height: 16),
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(
