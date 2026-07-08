@@ -223,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               const SizedBox(height: 4),
-              if (_pcs.length > 1 || _searchQuery.isNotEmpty)
+              if (_pcs.isNotEmpty || _searchQuery.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: TextField(
