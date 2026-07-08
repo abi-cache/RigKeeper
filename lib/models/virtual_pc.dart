@@ -10,6 +10,7 @@ class VirtualPc {
   final String? id;
   final String name;
   final IconData icon;
+  final String? imageUrl;
   final int componentCount;
   final int healthScore; // 0-100
   final int lastCleanedDaysAgo;
@@ -20,6 +21,7 @@ class VirtualPc {
     this.id,
     required this.name,
     required this.icon,
+    this.imageUrl,
     required this.componentCount,
     required this.healthScore,
     required this.lastCleanedDaysAgo,
@@ -44,6 +46,7 @@ class VirtualPc {
       id: map['id'] as String,
       name: map['name'] as String,
       icon: Icons.desktop_windows_outlined,
+      imageUrl: map['image_url'] as String?,
       componentCount: componentCount,
       healthScore: healthScore,
       lastCleanedDaysAgo: lastCleanedDaysAgo,
