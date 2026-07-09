@@ -127,6 +127,8 @@ class _HomeScreenState extends State<HomeScreen> {
         dustLevel: pcRow['dust_level'] as String? ?? 'medium',
         hasPets: pcRow['has_pets'] as bool? ?? false,
         dailyUsageHours: pcRow['daily_usage_hours'] as int? ?? 4,
+        gamingFrequency: pcRow['gaming_frequency'] as String? ?? 'sometimes',
+        hasAc: pcRow['has_ac'] as bool? ?? false,
       );
       final healthScore = calculateHealthScore(
         daysSinceLastCleaned: daysSinceLastCleaned,
