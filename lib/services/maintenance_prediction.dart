@@ -17,13 +17,16 @@ library;
 const int _baseCleaningIntervalDays = 60;
 
 /// Adjusts the base interval based on real environment factors from
-/// the original brief: dust exposure, pets, and usage hours. Still
-/// fully rule-based and explainable — each adjustment is a plain,
-/// named reason, not a hidden weight in a model.
+/// the original brief: dust exposure, pets, usage hours, gaming
+/// frequency, and air conditioning. Still fully rule-based and
+/// explainable — each adjustment is a plain, named reason, not a
+/// hidden weight in a model.
 int _adjustedIdealInterval({
   required String dustLevel,
   required bool hasPets,
   required int dailyUsageHours,
+  required String gamingFrequency,
+  required bool hasAc,
 }) {
   int interval = _baseCleaningIntervalDays;
 
@@ -48,6 +51,33 @@ int _adjustedIdealInterval({
     interval += 10;
   }
 
+  // Gaming pushes fans to run harder and longer, pulling in more
+  // dust than idle/light use — same "more airflow = more buildup"
+  // logic as usage hours, but tracked separately since someone could
+  // have the PC on all day at idle (low dust impact) or game hard in
+  // short, intense bursts (high dust impact despite fewer hours).
+  switch (gamingFrequency) {
+    case 'rarely':
+      interval += 10;
+      break;
+    case 'often':
+      interval -= 10;
+      break;
+    case 'daily':
+      interval -= 15;
+      break;
+    default: // 'sometimes'
+      break;
+  }
+
+  // Air conditioning generally means lower ambient dust and more
+  // stable humidity/temperature, both of which slow dust buildup —
+  // a modest, single-direction bonus rather than penalizing PCs
+  // without AC (that case is already reflected via dust_level).
+  if (hasAc) {
+    interval += 10;
+  }
+
   // Never let environment factors push the interval below 14 days —
   // avoids nonsensical "clean every 3 days" results from stacking
   // multiple adjustments.
@@ -62,11 +92,15 @@ int predictNextCleaning({
   String dustLevel = 'medium',
   bool hasPets = false,
   int dailyUsageHours = 4,
+  String gamingFrequency = 'sometimes',
+  bool hasAc = false,
 }) {
   final idealInterval = _adjustedIdealInterval(
     dustLevel: dustLevel,
     hasPets: hasPets,
     dailyUsageHours: dailyUsageHours,
+    gamingFrequency: gamingFrequency,
+    hasAc: hasAc,
   );
   return idealInterval - daysSinceLastCleaned;
 }
