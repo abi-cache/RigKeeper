@@ -3,11 +3,6 @@ import '../main.dart';
 import '../models/component.dart';
 import '../services/serial_decoder.dart';
 
-/// Form for adding a component to a specific PC.
-///
-/// Takes [pcId] via the constructor so it knows which PC this new
-/// component belongs to — same pattern as PcDetailScreen receiving
-/// a whole VirtualPc earlier.
 /// Form for adding OR editing a component belonging to a specific PC.
 ///
 /// If [existingComponent] is null, this is "add" mode — an insert.
@@ -29,14 +24,15 @@ class AddComponentScreen extends StatefulWidget {
 }
 
 class _AddComponentScreenState extends State<AddComponentScreen> {
-  late final _nameController = TextEditingController(
-      text: widget.existingComponent?.name ?? '');
+  final _nameController = TextEditingController();
   final _serialController = TextEditingController();
   final _brandController = TextEditingController();
   final _notesController = TextEditingController();
   late String _category =
       widget.existingComponent?.category ?? componentCategories.first;
   DateTime? _manufacturingDate;
+  DateTime? _purchaseDate;
+  DateTime? _installationDate;
   DateTime? _warrantyDate;
   String? _decodeNote;
   bool _isSaving = false;
@@ -47,12 +43,14 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill the rest of the fields when editing.
     final existing = widget.existingComponent;
     if (existing != null) {
+      _nameController.text = existing.name;
       _serialController.text = existing.serialNumber ?? '';
       _notesController.text = existing.notes ?? '';
       _manufacturingDate = existing.manufacturingDate;
+      _purchaseDate = existing.purchaseDate;
+      _installationDate = existing.installationDate;
       _warrantyDate = existing.warrantyExpiration;
     }
   }
@@ -103,6 +101,21 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
     }
   }
 
+  /// Generic date picker used for Purchase Date and Installation Date
+  /// — both work the same way (pick a past date, store it), so one
+  /// shared method avoids duplicating near-identical code twice.
+  Future<void> _pickGenericDate(void Function(DateTime) onPicked) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() => onPicked(picked));
+    }
+  }
+
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
@@ -124,6 +137,8 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
             ? null
             : _serialController.text.trim(),
         'manufacturing_date': _manufacturingDate?.toIso8601String(),
+        'purchase_date': _purchaseDate?.toIso8601String(),
+        'installation_date': _installationDate?.toIso8601String(),
         'warranty_expiration': _warrantyDate?.toIso8601String(),
         'notes': _notesController.text.trim().isEmpty
             ? null
@@ -231,6 +246,26 @@ class _AddComponentScreenState extends State<AddComponentScreen> {
                 _manufacturingDate == null
                     ? 'Set manufacturing date (optional)'
                     : 'Made: ${_manufacturingDate!.year}-${_manufacturingDate!.month.toString().padLeft(2, '0')}-${_manufacturingDate!.day.toString().padLeft(2, '0')}',
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => _pickGenericDate((d) => _purchaseDate = d),
+              icon: const Icon(Icons.receipt_long_outlined, size: 16),
+              label: Text(
+                _purchaseDate == null
+                    ? 'Set purchase date (optional)'
+                    : 'Purchased: ${_purchaseDate!.year}-${_purchaseDate!.month.toString().padLeft(2, '0')}-${_purchaseDate!.day.toString().padLeft(2, '0')}',
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => _pickGenericDate((d) => _installationDate = d),
+              icon: const Icon(Icons.build_outlined, size: 16),
+              label: Text(
+                _installationDate == null
+                    ? 'Set installation date (optional)'
+                    : 'Installed: ${_installationDate!.year}-${_installationDate!.month.toString().padLeft(2, '0')}-${_installationDate!.day.toString().padLeft(2, '0')}',
               ),
             ),
             const SizedBox(height: 12),
