@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
 import '../models/maintenance_log.dart';
+import '../models/component.dart';
 
 class AddMaintenanceLogScreen extends StatefulWidget {
   final String pcId;
@@ -30,6 +31,32 @@ class _AddMaintenanceLogScreenState extends State<AddMaintenanceLogScreen> {
   Uint8List? _afterBytes;
 
   final _picker = ImagePicker();
+
+  // Which components (from this PC) the user marks as "serviced" in
+  // this session. Matches the original brief's "Components serviced"
+  // field on each maintenance log.
+  List<Component> _availableComponents = [];
+  final Set<String> _selectedComponentIds = {};
+  bool _loadingComponents = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadComponents();
+  }
+
+  Future<void> _loadComponents() async {
+    final rows = await supabase
+        .from('components')
+        .select()
+        .eq('pc_id', widget.pcId)
+        .order('name');
+    setState(() {
+      _availableComponents =
+          rows.map((row) => Component.fromMap(row)).toList();
+      _loadingComponents = false;
+    });
+  }
 
   Future<void> _pickImage(bool isBefore) async {
     final picked = await _picker.pickImage(
@@ -95,16 +122,36 @@ class _AddMaintenanceLogScreenState extends State<AddMaintenanceLogScreen> {
         afterUrl = await _uploadPhoto(_afterBytes!, 'after');
       }
 
-      await supabase.from('maintenance_logs').insert({
-        'pc_id': widget.pcId,
-        'log_date': _date.toIso8601String().split('T').first,
-        'type': _type,
-        'notes': _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
-        'before_photo_url': beforeUrl,
-        'after_photo_url': afterUrl,
-      });
+      // .select() on insert returns the inserted row(s) back, which
+      // is how we get the new log's id to link components to it
+      // right after — Supabase doesn't hand back an id otherwise.
+      final inserted = await supabase
+          .from('maintenance_logs')
+          .insert({
+            'pc_id': widget.pcId,
+            'log_date': _date.toIso8601String().split('T').first,
+            'type': _type,
+            'notes': _notesController.text.trim().isEmpty
+                ? null
+                : _notesController.text.trim(),
+            'before_photo_url': beforeUrl,
+            'after_photo_url': afterUrl,
+          })
+          .select()
+          .single();
+
+      final logId = inserted['id'] as String;
+
+      if (_selectedComponentIds.isNotEmpty) {
+        await supabase.from('maintenance_log_components').insert(
+              _selectedComponentIds
+                  .map((componentId) => {
+                        'log_id': logId,
+                        'component_id': componentId,
+                      })
+                  .toList(),
+            );
+      }
 
       if (mounted) {
         Navigator.pop(context, true);
@@ -186,6 +233,46 @@ class _AddMaintenanceLogScreenState extends State<AddMaintenanceLogScreen> {
                 '${_date.year}-${_date.month.toString().padLeft(2, '0')}-${_date.day.toString().padLeft(2, '0')}',
               ),
             ),
+            const SizedBox(height: 16),
+            Text('Components serviced (optional)',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 8),
+            if (_loadingComponents)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_availableComponents.isEmpty)
+              Text(
+                'This PC has no components added yet.',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _availableComponents.map((c) {
+                  final selected = _selectedComponentIds.contains(c.id);
+                  return FilterChip(
+                    label: Text(c.name),
+                    selected: selected,
+                    onSelected: (value) {
+                      setState(() {
+                        if (value) {
+                          _selectedComponentIds.add(c.id);
+                        } else {
+                          _selectedComponentIds.remove(c.id);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
             const SizedBox(height: 16),
             Text('Photos',
                 style: TextStyle(
