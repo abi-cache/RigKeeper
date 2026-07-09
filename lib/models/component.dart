@@ -11,6 +11,8 @@ class Component {
   final String category;
   final String? serialNumber;
   final DateTime? manufacturingDate;
+  final DateTime? purchaseDate;
+  final DateTime? installationDate;
   final DateTime? warrantyExpiration;
   final String? notes;
 
@@ -21,6 +23,8 @@ class Component {
     required this.category,
     this.serialNumber,
     this.manufacturingDate,
+    this.purchaseDate,
+    this.installationDate,
     this.warrantyExpiration,
     this.notes,
   });
@@ -34,6 +38,12 @@ class Component {
       serialNumber: map['serial_number'] as String?,
       manufacturingDate: map['manufacturing_date'] != null
           ? DateTime.parse(map['manufacturing_date'] as String)
+          : null,
+      purchaseDate: map['purchase_date'] != null
+          ? DateTime.parse(map['purchase_date'] as String)
+          : null,
+      installationDate: map['installation_date'] != null
+          ? DateTime.parse(map['installation_date'] as String)
           : null,
       warrantyExpiration: map['warranty_expiration'] != null
           ? DateTime.parse(map['warranty_expiration'] as String)
