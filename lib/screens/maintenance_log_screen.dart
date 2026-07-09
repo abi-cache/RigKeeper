@@ -16,6 +16,9 @@ class MaintenanceLogScreen extends StatefulWidget {
 
 class _MaintenanceLogScreenState extends State<MaintenanceLogScreen> {
   List<MaintenanceLog> _logs = [];
+  // Maps a log's id to the names of components marked as serviced in
+  // that session — populated from a nested query below.
+  Map<String, List<String>> _servicedComponentNames = {};
   bool _isLoading = true;
 
   @override
@@ -29,14 +32,31 @@ class _MaintenanceLogScreenState extends State<MaintenanceLogScreen> {
 
     // Most recent first — order descending by date so the newest
     // maintenance entry appears at the top of the timeline.
+    //
+    // The nested select below asks Postgres to also embed each log's
+    // linked components (through the maintenance_log_components
+    // junction table) in the same query, rather than fetching them
+    // separately per log — one round trip instead of many.
     final rows = await supabase
         .from('maintenance_logs')
-        .select()
+        .select('*, maintenance_log_components(components(id, name))')
         .eq('pc_id', widget.pcId)
         .order('log_date', ascending: false);
 
+    final namesMap = <String, List<String>>{};
+    for (final row in rows) {
+      final logId = row['id'] as String;
+      final links = row['maintenance_log_components'] as List? ?? [];
+      final names = links
+          .map((link) => (link['components']?['name']) as String?)
+          .whereType<String>()
+          .toList();
+      namesMap[logId] = names;
+    }
+
     setState(() {
       _logs = rows.map((row) => MaintenanceLog.fromMap(row)).toList();
+      _servicedComponentNames = namesMap;
       _isLoading = false;
     });
   }
@@ -97,6 +117,37 @@ class _MaintenanceLogScreenState extends State<MaintenanceLogScreen> {
                                         style: TextStyle(
                                             fontSize: 13,
                                             color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                                  ],
+                                  if ((_servicedComponentNames[log.id] ?? [])
+                                      .isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 6,
+                                      children: _servicedComponentNames[log.id]!
+                                          .map((name) => Container(
+                                                padding: const EdgeInsets
+                                                    .symmetric(
+                                                    horizontal: 8, vertical: 3),
+                                                decoration: BoxDecoration(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .secondaryContainer,
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  name,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSecondaryContainer,
+                                                  ),
+                                                ),
+                                              ))
+                                          .toList(),
+                                    ),
                                   ],
                                   if (log.beforePhotoUrl != null ||
                                       log.afterPhotoUrl != null) ...[
