@@ -20,6 +20,8 @@ class _AddPcScreenState extends State<AddPcScreen> {
   String _dustLevel = 'medium';
   bool _hasPets = false;
   int _dailyUsageHours = 4;
+  String _gamingFrequency = 'sometimes';
+  bool _hasAc = false;
   bool _isSaving = false;
   String? _errorMessage;
 
@@ -72,6 +74,8 @@ class _AddPcScreenState extends State<AddPcScreen> {
         'dust_level': _dustLevel,
         'has_pets': _hasPets,
         'daily_usage_hours': _dailyUsageHours,
+        'gaming_frequency': _gamingFrequency,
+        'has_ac': _hasAc,
         'image_url': imageUrl,
       });
 
@@ -185,6 +189,30 @@ class _AddPcScreenState extends State<AddPcScreen> {
               label: '$_dailyUsageHours hrs',
               onChanged: (value) =>
                   setState(() => _dailyUsageHours = value.round()),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              initialValue: _gamingFrequency,
+              decoration: const InputDecoration(
+                labelText: 'How often is this PC used for gaming?',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'rarely', child: Text('Rarely')),
+                DropdownMenuItem(value: 'sometimes', child: Text('Sometimes')),
+                DropdownMenuItem(value: 'often', child: Text('Often')),
+                DropdownMenuItem(value: 'daily', child: Text('Daily')),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _gamingFrequency = value);
+              },
+            ),
+            const SizedBox(height: 12),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Room has air conditioning'),
+              value: _hasAc,
+              onChanged: (value) => setState(() => _hasAc = value),
             ),
             if (_errorMessage != null) ...[
               const SizedBox(height: 8),
